@@ -1,7 +1,7 @@
+
 # 🧠 GGUF Manager & Deployment Dashboard
 
-> **v13.0 – Diagnostic Edition**  
-> A terminal-based management suite for running, deploying, and exposing local LLMs via Ollama — with an integrated Open WebUI interface and Cloudflare WAN tunneling.
+> **v13.0 – Diagnostic Edition** > A terminal-based management suite for running, deploying, and exposing local LLMs via Ollama — with an integrated Open WebUI interface and Cloudflare WAN tunneling.
 
 ---
 
@@ -15,6 +15,7 @@
 - [Menu Options](#menu-options)
 - [Architecture](#architecture)
 - [Configuration](#configuration)
+- [Hugging Face Integration](#hugging-face-integration)
 - [Security Notes](#security-notes)
 - [Known Limitations](#known-limitations)
 - [Troubleshooting](#troubleshooting)
@@ -107,7 +108,7 @@ Designed for self-hosters, privacy-conscious users, and AI hobbyists who want fu
 
 ```bash
 # Clone or download the script
-git clone https://github.com/yourusername/gguf-manager.git
+git clone [https://github.com/ashardian/GGUForge.git](https://github.com/ashardian/GGUForge.git)
 cd gguf-manager
 
 # Make executable
@@ -221,6 +222,36 @@ These constants are defined at the top of the script and can be edited directly:
 
 ---
 
+## Hugging Face Integration
+
+Open WebUI supports pulling models directly from Hugging Face, but gated models require an access token. You can configure this directly within the script's Docker deployment.
+
+### How to configure your Hugging Face Token:
+
+1. Obtain a **Read Access Token** from your [Hugging Face Settings -> Access Tokens](https://huggingface.co/settings/tokens).
+2. Open `llm2.py` in your text editor (e.g., `nano llm2.py`).
+3. Scroll down to the `start_open_webui()` function.
+4. Locate the Docker command arguments array. Modify the `-e` flags to include your token:
+
+```python
+cmd = docker_cmd_base + [
+    "run", "-d", 
+    "-p", "3000:8080", 
+    "--add-host=host.docker.internal:host-gateway",
+    "-e", "OLLAMA_BASE_URL=[http://host.docker.internal:11434](http://host.docker.internal:11434)",
+    "-e", "HF_ENDPOINT=[https://hf-mirror.com](https://hf-mirror.com)",
+    "-e", "HF_TOKEN=hf_your_actual_token_here", # <--- UPDATE THIS LINE
+    "-v", "open-webui:/app/backend/data",
+    "--name", "open-webui",
+    "--restart", "always",
+    "ghcr.io/open-webui/open-webui:main"
+]
+```
+
+5. Save the file. When you launch Open WebUI (Option `[4]`), Docker will securely pass your token, granting the UI access to your gated Hugging Face repositories.
+
+---
+
 ## Security Notes
 
 - **Model name validation**: The delete function validates input against `^[a-zA-Z0-9_\-\.:]+$` before passing to `ollama rm` — prevents shell injection.
@@ -264,3 +295,4 @@ MIT License — see `LICENSE` file for details.
 ---
 
 *Built for the self-hosting community. No cloud. No subscriptions. Your hardware, your models.*
+```
